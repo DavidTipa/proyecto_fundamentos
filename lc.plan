@@ -1,0 +1,45 @@
+%int(0). int(1). int(2). int(3).
+
+fluents:
+    stock(N) requires int(N).
+    procesado(L) requires lente(L).
+    aprobado(L) requires lente(L).
+
+actions:
+    comprar(C) requires int(C).      % Acción parametrizada
+    procesar(L) requires lente(L).
+    aprobar(L) requires lente(L).
+
+always:
+    % Regla para comprar: ahora con C <= 2
+    executable comprar(C) if stock(N), suma(N, C, NC), menor_que(N, 2), C <= 2.
+    caused stock(NC) after comprar(C), stock(N), suma(N, C, NC).
+    caused -stock(N) after comprar(C), stock(N).
+
+    % Resto de reglas (procesar y aprobar)
+    executable procesar(L) if stock(N), N > 0, not procesado(L).
+    caused procesado(L) after procesar(L).
+    caused stock(N1) after procesar(L), stock(N), pred(N1, N).
+    caused -stock(N) after procesar(L), stock(N).
+
+    executable aprobar(L) if procesado(L), not aprobado(L).
+    caused aprobado(L) after aprobar(L).
+
+    % Restricciones
+    nonexecutable aprobar(L) if not procesado(L).
+    nonexecutable procesar(L) if procesado(L).
+
+    inertial stock(N).
+    inertial procesado(L).
+    inertial aprobado(L).
+
+    %noConcurrency.
+
+initially:
+    stock(1).
+    -procesado(l1). -aprobado(l1).
+    -procesado(l2). -aprobado(l2).
+    -procesado(l3). -aprobado(l3).
+
+goal:
+    aprobado(l1), aprobado(l2), aprobado(l3) ? (7)
